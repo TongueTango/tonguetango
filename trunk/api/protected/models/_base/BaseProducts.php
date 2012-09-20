@@ -94,4 +94,8 @@ abstract class BaseProducts extends GxActiveRecord {
 			'criteria' => $criteria,
 		));
 	}
+
+	public function has( $user_id ) {
+		return ProductsUsers::model()->count( 'product_id = ' . $this->id . ' AND user_id =' . $user_id );
+	}
 }

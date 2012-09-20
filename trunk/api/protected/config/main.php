@@ -71,7 +71,12 @@ $arrayMainConfig = array('basePath'=>dirname(__FILE__).DIRECTORY_SEPARATOR.'..',
                 array('group/update', 'pattern'=>'group/update/<id:\d+>', 'verb'=>'PUT'),
                 array('group/list', 'pattern'=>'group/list', 'verb'=>'GET'),
                 array('group/delete', 'pattern'=>'group/delete/<id:\d+>', 'verb'=>'DELETE'),
-                
+
+                // REST patterns for products
+                array('product/index', 'pattern'=>'product/index', 'verb'=>'GET'),
+
+
+
 				'<controller:\w+>/<action:\w+>/<id:\d+>'=>'<controller>/<action>',
 				'<controller:\w+>/<action:\w+>'=>'<controller>/<action>',
 			),

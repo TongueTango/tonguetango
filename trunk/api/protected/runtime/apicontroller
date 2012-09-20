@@ -67442,3 +67442,18 @@ Sep 19 18:23:22 [system.web.CController        ] : <I> User:User: stdClass Objec
 
 )
 
+Sep 20 17:50:30 [system.web.CController        ] : <I> ~~~~~~~~~~~~~~~~\Api Controller Initializing
+Sep 20 17:50:30 [system.web.CController        ] : <I> auth_token: 
+Sep 20 17:50:30 [exception.CException          ] : <E> exception 'CException' with message 'Property "SiteController.request" is not defined.' in Z:\home\tango3.tt\www\trunk\api\framework\base\CComponent.php:131
+Stack trace:
+#0 Z:\home\tango3.tt\www\trunk\api\protected\components\Controller.php(83): CComponent->__get('request')
+#1 Z:\home\tango3.tt\www\trunk\api\framework\web\CController.php(307): Controller->beforeAction(Object(CInlineAction))
+#2 Z:\home\tango3.tt\www\trunk\api\framework\web\CController.php(287): CController->runAction(Object(CInlineAction))
+#3 Z:\home\tango3.tt\www\trunk\api\framework\web\CController.php(266): CController->runActionWithFilters(Object(CInlineAction), Array)
+#4 Z:\home\tango3.tt\www\trunk\api\framework\web\CWebApplication.php(276): CController->run('')
+#5 Z:\home\tango3.tt\www\trunk\api\framework\web\CWebApplication.php(135): CWebApplication->runController('')
+#6 Z:\home\tango3.tt\www\trunk\api\framework\base\CApplication.php(162): CWebApplication->processRequest()
+#7 Z:\home\tango3.tt\www\trunk\api\index.php(15): CApplication->run()
+#8 {main}
+REQUEST_URI=/trunk/api/
+---
