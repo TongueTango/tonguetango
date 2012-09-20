@@ -1,10 +1,10 @@
 <?php
-
+// Test comment
 // change the following paths if necessary
 $yii    = dirname(__FILE__).'/framework/yii.php';
 $config = dirname(__FILE__).'/protected/config/main.php';
 
-define('APPPATH', realpath('protected').DIRECTORY_SEPARATOR);
+define('APPPATH', realpath('protected') . DIRECTORY_SEPARATOR);
 
 // remove the following lines when in production mode
 defined('YII_DEBUG') or define('YII_DEBUG',false);
