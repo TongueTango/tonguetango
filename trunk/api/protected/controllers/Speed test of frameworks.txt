@@ -1,0 +1,5 @@
+Speed test of frameworks
+1. Action Login = Y - 2.4345459938049/0.035907030105591, K - ;
+2. Action Create = Y - 0.32486295700073, K - ;
+3. Action Update = Change Password(Y - 0.15685415267944, K - ), Update User(Y - 0.12401008605957, K - );
+4. Action Delete = Y - , K - ;
