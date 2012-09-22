@@ -10,10 +10,10 @@ class UserController extends Controller
         Yii::log("User login", 'info', 'system.web.CController'); 
         
         
-		if( array_key_exists('facebook_access_token', $data) && $data['facebook_access_token'] != '' ) {
-			$user = Users::model()->find("facebook_access_token='" . $data["facebook_access_token"]."'");
-			// we may have a new access_token.  if no match search by facebook UID and update the token
-			if (!$user && isset($data['facebook_id'])) {
+        if( array_key_exists('facebook_access_token', $data) && $data['facebook_access_token'] != '' ) {
+            $user = Users::model()->find("facebook_access_token='" . $data["facebook_access_token"]."'");
+            // we may have a new access_token.  if no match search by facebook UID and update the token
+            if (!$user && isset($data['facebook_id'])) {
                 
                 $command = Yii::app()->db->createCommand()
                         ->select('users.id')
@@ -23,43 +23,43 @@ class UserController extends Controller
                 
                 $userId = $command->queryRow();
                 
-				if ($userId) {
+                if ($userId) {
                     
                     $user = Users::model()->findByPk($userId['id']);
-					$user->facebook_access_token = $data["facebook_access_token"];
-					$user->save();
-				}
+                    $user->facebook_access_token = $data["facebook_access_token"];
+                    $user->save();
+                }
                 
-			}
-		// Twitter login
-		} elseif( array_key_exists('twitter_auth_token', $data) && $data['twitter_auth_token'] != '' ) {
-			$twittah = array();
-			
-			parse_str($data['twitter_auth_token'], $twittah);
-			if (is_array($twittah)) {
-				array_pop($twittah);
-				$data['twitter_auth_token'] = http_build_query($twittah);
-			}
+            }
+        // Twitter login
+        } elseif( array_key_exists('twitter_auth_token', $data) && $data['twitter_auth_token'] != '' ) {
+            $twittah = array();
             
-			$user = Users::model()->find("twitter_auth_token= '" . $data["twitter_auth_token"] . "'");
+            parse_str($data['twitter_auth_token'], $twittah);
+            if (is_array($twittah)) {
+                array_pop($twittah);
+                $data['twitter_auth_token'] = http_build_query($twittah);
+            }
             
-		} elseif((array_key_exists('username', $data) && !empty($data['username']))
-				&& (array_key_exists('passwd', $data) && !empty($data['passwd'])) ) {
+            $user = Users::model()->find("twitter_auth_token= '" . $data["twitter_auth_token"] . "'");
             
-			$user = Users::model()->find('username= "' . $data['username'] . '" AND passwd="' . $data['passwd'] . '"');
+        } elseif((array_key_exists('username', $data) && !empty($data['username']))
+                && (array_key_exists('passwd', $data) && !empty($data['passwd'])) ) {
+            
+            $user = Users::model()->find('username= "' . $data['username'] . '" AND passwd="' . md5( $data['passwd'] ) . '"');
 
             if( !$user ) {
                 $email = PersonEmails::model()->find( 'email_address=:email', array( ':email' => $data['username'] ) );
                 
                 foreach ( $email->person->users as $tmpUser ) {
-                    if( $tmpUser->passwd == md5(md5( $data['passwd'] ) ) ) {
+                    if( $tmpUser->passwd == md5( $data['passwd'] ) ) {
                         $user = $tmpUser; break;
                     }
                 }
             }
             
-		} else {
-			$this->_sendResponse(200, array("code"=>'0','message'=>'No usable account identification available, please pass facebook token or username and password!'));
+        } else {
+            $this->_sendResponse(200, array("code"=>'0','message'=>'No usable account identification available, please pass facebook token or username and password!'));
         }
         if( !$user){
             $this->_sendResponse(200, array("code"=>'0','message'=>'Incorrect username / password combination'));
@@ -67,18 +67,18 @@ class UserController extends Controller
         
         self::$user = $user;
         //Yii::log("User:" ."User: " . print_r(self::$user->attributes,true), 'info', 'system.web.CController'); 
-		
+        
         
         $data = array_merge($data,array(
-        	"user_id"	=> self::$user->id
+            "user_id"   => self::$user->id
         ));
         
         //check if auth token is already generated
         if (!isset($data['unique_id'])) {
-			$this->_sendResponse(200, array("code"=>'0','message'=>'Device unique_id is required.'));
-		}
+            $this->_sendResponse(200, array("code"=>'0','message'=>'Device unique_id is required.'));
+        }
         
-		$device = Devices::model()->find("user_id=" . self::$user->id . " AND unique_id= '" . $data["unique_id"] . "'");
+        $device = Devices::model()->find("user_id=" . self::$user->id . " AND unique_id= '" . $data["unique_id"] . "'");
         
         if($device && $device instanceof CActiveRecord) {
             $device->setAttributes($data);
@@ -89,40 +89,40 @@ class UserController extends Controller
                 $this->_sendResponse(200, array("code"=>'0','message'=>$e->getMessage()));
             }
         }
-		
-		self::$device = $device;
         
-		// Collect friend data
-		$friends = self::$user->get_facebook_friends($data);
-		self::$user->save_facebook_friends($friends);
-		$friends = self::$user->get_tongue_tango_friends($friends);
+        self::$device = $device;
         
-		if(self::$device && self::$device instanceof CActiveRecord)
-            $this->setOutput("token",			self::$device->auth_token);
-		$this->setOutput("user_id",			self::$user->id);
-		$this->setOutput("photo",			self::$user->person->photo);
+        // Collect friend data
+        $friends = self::$user->get_facebook_friends($data);
+        self::$user->save_facebook_friends($friends);
+        $friends = self::$user->get_tongue_tango_friends($friends);
         
-		foreach(self::$user as $key=>$value) $this->setOutput($key,$value);
-		foreach(self::$user->person as $key=>$value) {
+        if(self::$device && self::$device instanceof CActiveRecord)
+            $this->setOutput("token",           self::$device->auth_token);
+        $this->setOutput("user_id",         self::$user->id);
+        $this->setOutput("photo",           self::$user->person->photo);
+        
+        foreach(self::$user as $key=>$value) $this->setOutput($key,$value);
+        foreach(self::$user->person as $key=>$value) {
             if( !in_array($key, array('id', 'email_id', 'phone_id', 'address_id')) && !is_array($value) ) {
-    			$this->setOutput($key, $value);
-    		}
+                $this->setOutput($key, $value);
+            }
         }
-        $this->setOutput('fb_friends',		$friends['fb_friends']);
-		$this->setOutput('tt_friends',		$friends['tt_friends']);
-		$this->setOutput('pending_friends',	$friends['pending_friends']);
+        $this->setOutput('fb_friends',      $friends['fb_friends']);
+        $this->setOutput('tt_friends',      $friends['tt_friends']);
+        $this->setOutput('pending_friends', $friends['pending_friends']);
         
         $person = self::$user->person;
         if( $person->email ) {
-    		$this->setOutput('email_type',		$person->email->email_type);
-    		$this->setOutput('email_address',	$person->email->email_address);
-    	}
-    	if( $person->phone ) {
-    		$this->setOutput('phone_type',		$person->phone->phone_type);
-    		$this->setOutput('phone_number',	$person->phone->phone_number);
-    	}
+            $this->setOutput('email_type',      $person->email->email_type);
+            $this->setOutput('email_address',   $person->email->email_address);
+        }
+        if( $person->phone ) {
+            $this->setOutput('phone_type',      $person->phone->phone_type);
+            $this->setOutput('phone_number',    $person->phone->phone_number);
+        }
         
-    	$this->setOutput('user_id',		self::$user->id);
+        $this->setOutput('user_id',     self::$user->id);
         
         //$this->_sendResponse();
     }
@@ -253,13 +253,13 @@ class UserController extends Controller
      */
     public function actionUpdate()
     {
-    	$person	= self::$user->person;
-    	$file	= $this->getInput('file');
-    	if( is_array($file) && array_key_exists('name', $file) ) {  		
+        $person = self::$user->person;
+        $file   = $this->getInput('file');
+        if( is_array($file) && array_key_exists('name', $file) ) {          
             // OLD: Kohana upload code
-            //$photo		= Upload::save($file, $name, APPPATH.'cache');
-    		//$public_uri	= Model_Cloudfile::upload_file($photo, 'user-image');
-    		
+            //$photo        = Upload::save($file, $name, APPPATH.'cache');
+            //$public_uri   = Model_Cloudfile::upload_file($photo, 'user-image');
+            
             // Yii upload code
             /*$photo = new Photo;
             $photo->image = $file;
@@ -272,103 +272,104 @@ class UserController extends Controller
                     $person->save();
                 }
             }*/
-    	}
-    	$inputs	= $this->getInputs();
-		//Yii::log("Updating User: \n".print_r( $inputs, true), 'info', 'system.web.CController');
-			
-		// Handle the situation where a person creates an account without FB,
-		// subsequently was added by someone else as a contact,
-		// then attempts to connect to FB.
+        }
+        $inputs = $this->getInputs();
+        //Yii::log("Updating User: \n".print_r( $inputs, true), 'info', 'system.web.CController');
+            
+        // Handle the situation where a person creates an account without FB,
+        // subsequently was added by someone else as a contact,
+        // then attempts to connect to FB.
 
-		if ( $person->facebook_id == null 
-			&& isset($inputs['facebook_id']) 
-			&& $inputs['facebook_id'] != '' ) {
-			//Yii::log("Attempting to connect existing Tt account to FB: \n".print_r( $inputs, true), 'info', 'system.web.CController');
+        if ( $person->facebook_id == null 
+            && isset($inputs['facebook_id']) 
+            && $inputs['facebook_id'] != '' ) {
+            //Yii::log("Attempting to connect existing Tt account to FB: \n".print_r( $inputs, true), 'info', 'system.web.CController');
 
                         
-			// try to find an existing person record
+            // try to find an existing person record
             $criteria = new CDbCriteria;
             $criteria->condition=array('facebook_id='.$inputs['facebook_id'],"id!=".self::$user->id);
             $other_person = Person::model()->find($criteria);
 
-			if ( count( $other_person ) ) {
-				// if we found a person with a user record, throw the error
-				$other_user = Users::model()->findByAttributes( array( 'person_id' => $other_person->id ) );
-				if ( count( $other_user ) ) {
+            if ( count( $other_person ) ) {
+                // if we found a person with a user record, throw the error
+                $other_user = Users::model()->findByAttributes( array( 'person_id' => $other_person->id ) );
+                if ( count( $other_user ) ) {
                     //Yii::log( "Problem connecting existing Tt account to FB: \n".print_r( $inputs, true), 'info', 'system.web.CController');
-					$this->_sendResponse(200, array("code"=>'0','message'=>'Facebook Error: This FB account belongs to another person/user'));
-				} else {
-					// otherwise, update the pre-existing person record
-					//Yii::log("Updating user_id '. API::$user->id .' with provided new FB info ", 'info', 'system.web.CController');
-					
-					$other_person->facebook_id = null;
-					$other_person->save();
-					// then update the current person record
-					$person->facebook_id = $inputs['facebook_id'];
-					$person->save();
-					// then update the current user record with the FB access token
-					self::$user->facebook_access_token = $inputs['facebook_access_token'];
-					self::$user->save();
-				}
-			}
-		}
-		
-    	$person->attributes = $inputs;
+                    $this->_sendResponse(200, array("code"=>'0','message'=>'Facebook Error: This FB account belongs to another person/user'));
+                } else {
+                    // otherwise, update the pre-existing person record
+                    //Yii::log("Updating user_id '. API::$user->id .' with provided new FB info ", 'info', 'system.web.CController');
+                    
+                    $other_person->facebook_id = null;
+                    $other_person->save();
+                    // then update the current person record
+                    $person->facebook_id = $inputs['facebook_id'];
+                    $person->save();
+                    // then update the current user record with the FB access token
+                    self::$user->facebook_access_token = $inputs['facebook_access_token'];
+                    self::$user->save();
+                }
+            }
+        }
+        
+        $person->attributes = $inputs;
         $person->save();
 
-    	self::$user->attributes = $inputs;
+        self::$user->attributes = $inputs;
+        if( in_array( 'passwd', $inputs) ) self::$user->passwd = md5( $inputs['passwd'] );
         self::$user->save();
 
         Yii::log("Updated user: \n " . print_r(self::$user->attributes, true), 'info', 'system.web.CController');
-    	if( isset( $inputs['email_address'] ) ) {
+        if( isset( $inputs['email_address'] ) ) {
                 $email= PersonEmails::model()->findByAttributes( array( 'email_address' => $inputs['email_address'] ) );
-    		  
-    		if( !count( $email ) ) {
+              
+            if( !count( $email ) ) {
                 $email = new PersonEmails;
-	    		$email->email_address	= $inputs['email_address'];
-	    		$email->email_type		= ( isset( $inputs['email_type'] ) ) ? $inputs['email_type'] : 'home';
-	    		$email->person_id		= $person->id;
-	    		$email->save();
+                $email->email_address   = $inputs['email_address'];
+                $email->email_type      = ( isset( $inputs['email_type'] ) ) ? $inputs['email_type'] : 'home';
+                $email->person_id       = $person->id;
+                $email->save();
 
-    		}
+            }
 
-    		$person->email_id		= $email->id;
-    		$person->save();//print_r( $person->getErrors() );die();
+            $person->email_id       = $email->id;
+            $person->save();//print_r( $person->getErrors() );die();
             $person->refresh();
 
-    	}
-    	if( isset( $inputs['phone'] ) ) {
-    		// $phone	= ORM::factory('person_phone', array('phone_number' => Arr::get($inputs, 'phone')));
-			$phone = $person->phone;
-    		if( count( $phone ) ) {
-	    		$phone->phone_number	= $inputs['phone'];
-	    		$phone->phone_type		= ( isset( $inputs['phone_type'] ) ) ? $inputs['phone_type'] : 'home';
-	    		$phone->person_id		= $person->id;
-	    		$phone->save();
-    		}
-    		$person->phone_id		= $phone->id;
-    		$person->save();
+        }
+        if( isset( $inputs['phone'] ) ) {
+            // $phone   = ORM::factory('person_phone', array('phone_number' => Arr::get($inputs, 'phone')));
+            $phone = $person->phone;
+            if( count( $phone ) ) {
+                $phone->phone_number    = $inputs['phone'];
+                $phone->phone_type      = ( isset( $inputs['phone_type'] ) ) ? $inputs['phone_type'] : 'home';
+                $phone->person_id       = $person->id;
+                $phone->save();
+            }
+            $person->phone_id       = $phone->id;
+            $person->save();
             $person->refresh();
-    	}
-    	foreach( self::$user->attributes as $key => $value ) {
-    		if( !in_array($key, array('passwd', 'id', 'person_id')) && !is_array($value) ) {
-    			$this->setOutput($key, $value);
-    		}
-    	}
-    	foreach( $person->attributes as $key => $value ) {
-    		if( !in_array($key, array('id', 'email_id', 'phone_id', 'address_id')) && !is_array($value) ) {
-    			$this->setOutput($key, $value);
-    		}
-    	}
-    	if( count( $person->email ) ) {
-    		$this->setOutput('email_type',		$person->email->email_type);
-    		$this->setOutput('email_address',	$person->email->email_address);
-    	}
-    	if( count( $person->phone ) ) {
-    		$this->setOutput('phone_type',		$person->phone->phone_type);
-    		$this->setOutput('phone_number',	$person->phone->phone_number);
-    	}
-    	$this->setOutput('user_id',		self::$user->id);
+        }
+        foreach( self::$user->attributes as $key => $value ) {
+            if( !in_array($key, array('passwd', 'id', 'person_id')) && !is_array($value) ) {
+                $this->setOutput($key, $value);
+            }
+        }
+        foreach( $person->attributes as $key => $value ) {
+            if( !in_array($key, array('id', 'email_id', 'phone_id', 'address_id')) && !is_array($value) ) {
+                $this->setOutput($key, $value);
+            }
+        }
+        if( count( $person->email ) ) {
+            $this->setOutput('email_type',      $person->email->email_type);
+            $this->setOutput('email_address',   $person->email->email_address);
+        }
+        if( count( $person->phone ) ) {
+            $this->setOutput('phone_type',      $person->phone->phone_type);
+            $this->setOutput('phone_number',    $person->phone->phone_number);
+        }
+        $this->setOutput('user_id',     self::$user->id);
        
         //$this->_sendResponse();
     }
@@ -378,30 +379,30 @@ class UserController extends Controller
      */
     public function actionDelete()
     {
-    	$id		= $this->getInput('id');
+        $id     = $this->getInput('id');
         $user = User::model()->findByPk($id);
-    	if( !$user->loaded() ) {
-    		$this->_sendResponse(200, array("code"=>'0','message'=>'Invalid user specified or user does not exist!'));
-    	}
-    	$queries	= array(
-    		'DELETE FROM devices WHERE user_id = %1$s',
-			'DELETE FROM message_recipients WHERE message_id IN (SELECT id FROM messages WHERE user_id = %1$s)',
-			'DELETE FROM message_recipients WHERE user_id = %1$s',
-			'DELETE FROM message_favorites WHERE user_id = %1$s OR message_id IN (SELECT id FROM messages WHERE user_id = %1$s)',
-			'DELETE FROM messages WHERE user_id = %1$s',
-			'DELETE FROM contacts WHERE user_id = %1$s',
-			'DELETE FROM contacts WHERE contact_user_id = %1$s',
-			'UPDATE people SET email_id = null WHERE id = %1$s',
-    		'DELETE FROM person_emails WHERE person_id IN ( SELECT person_id FROM users WHERE id = %1$s)',
-    		'DELETE FROM person_phones WHERE person_id IN ( SELECT person_id FROM users WHERE id = %1$s)',
-    		'DELETE FROM person_addresses WHERE person_id IN ( SELECT person_id FROM users WHERE id = %1$s)',
-    		'DELETE FROM users WHERE id = %1$s',
-    		'DELETE FROM people WHERE id = ( SELECT person_id FROM users WHERE id = %1$s)',
-    	);
-    	foreach( $queries as $query ) {
-    		Database::instance()->query(Database::DELETE, sprintf($query, $id));
-    	}
-    	$this->setOutput('deleted',1);
+        if( !$user->loaded() ) {
+            $this->_sendResponse(200, array("code"=>'0','message'=>'Invalid user specified or user does not exist!'));
+        }
+        $queries    = array(
+            'DELETE FROM devices WHERE user_id = %1$s',
+            'DELETE FROM message_recipients WHERE message_id IN (SELECT id FROM messages WHERE user_id = %1$s)',
+            'DELETE FROM message_recipients WHERE user_id = %1$s',
+            'DELETE FROM message_favorites WHERE user_id = %1$s OR message_id IN (SELECT id FROM messages WHERE user_id = %1$s)',
+            'DELETE FROM messages WHERE user_id = %1$s',
+            'DELETE FROM contacts WHERE user_id = %1$s',
+            'DELETE FROM contacts WHERE contact_user_id = %1$s',
+            'UPDATE people SET email_id = null WHERE id = %1$s',
+            'DELETE FROM person_emails WHERE person_id IN ( SELECT person_id FROM users WHERE id = %1$s)',
+            'DELETE FROM person_phones WHERE person_id IN ( SELECT person_id FROM users WHERE id = %1$s)',
+            'DELETE FROM person_addresses WHERE person_id IN ( SELECT person_id FROM users WHERE id = %1$s)',
+            'DELETE FROM users WHERE id = %1$s',
+            'DELETE FROM people WHERE id = ( SELECT person_id FROM users WHERE id = %1$s)',
+        );
+        foreach( $queries as $query ) {
+            Database::instance()->query(Database::DELETE, sprintf($query, $id));
+        }
+        $this->setOutput('deleted',1);
     }
 
     public function does_user_exist($fb_access_token=null, $twitter_auth_token=null){
@@ -449,7 +450,7 @@ class UserController extends Controller
 
             $response = $request->execute();
 
-			$friends_json = $response->body();
+            $friends_json = $response->body();
 
             if(strlen($friends_json) <= 0) return false;
             $friends = json_decode($friends_json,true);
@@ -585,10 +586,10 @@ class UserController extends Controller
      */
     protected function _login($data)
     {
-		$login	= json_decode( $this->actionLogin() );
-		foreach( $login as $key=>$val) {
-			$this->setOutput($key, $val);
-		}
+        $login  = json_decode( $this->actionLogin() );
+        foreach( $login as $key=>$val) {
+            $this->setOutput($key, $val);
+        }
     }
     
 }
