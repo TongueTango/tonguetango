@@ -47,6 +47,16 @@ class UserController extends Controller
 				&& (array_key_exists('passwd', $data) && !empty($data['passwd'])) ) {
             
 			$user = Users::model()->find('username= "' . $data['username'] . '" AND passwd="' . $data['passwd'] . '"');
+
+            if( !$user ) {
+                $email = PersonEmails::model()->find( 'email_address=:email', array( ':email' => $data['username'] ) );
+                
+                foreach ( $email->person->users as $tmpUser ) {
+                    if( $tmpUser->passwd == md5(md5( $data['passwd'] ) ) ) {
+                        $user = $tmpUser; break;
+                    }
+                }
+            }
             
 		} else {
 			$this->_sendResponse(200, array("code"=>'0','message'=>'No usable account identification available, please pass facebook token or username and password!'));
