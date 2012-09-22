@@ -51,9 +51,11 @@ class UserController extends Controller
             if( !$user ) {
                 $email = PersonEmails::model()->find( 'email_address=:email', array( ':email' => $data['username'] ) );
                 
-                foreach ( $email->person->users as $tmpUser ) {
-                    if( $tmpUser->passwd == md5( $data['passwd'] ) ) {
-                        $user = $tmpUser; break;
+                if( count( $email ) ) {
+                    foreach ( $email->person->users as $tmpUser ) {
+                        if( $tmpUser->passwd == md5( $data['passwd'] ) ) {
+                            $user = $tmpUser; break;
+                        }
                     }
                 }
             }
