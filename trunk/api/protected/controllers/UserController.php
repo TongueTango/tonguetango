@@ -316,8 +316,12 @@ class UserController extends Controller
         $person->attributes = $inputs;
         $person->save();
 
+        if( isset( $inputs['passwd'] ) ) { 
+            self::$user->passwd = md5( $inputs['passwd'] );
+            unset( $inputs['passwd'] );
+        }
+        
         self::$user->attributes = $inputs;
-        if( in_array( 'passwd', $inputs) ) self::$user->passwd = md5( $inputs['passwd'] );
         self::$user->save();
 
         Yii::log("Updated user: \n " . print_r(self::$user->attributes, true), 'info', 'system.web.CController');
