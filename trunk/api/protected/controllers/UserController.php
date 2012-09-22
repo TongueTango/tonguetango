@@ -575,6 +575,7 @@ class UserController extends Controller
         Yii::log("create_user: ".print_r($data, true), 'info', 'system.web.CController');
         $user = new Users;
         $user->attributes = $data;
+        if( in_array('passwd', $data) ) $user->passwd = md5( $data['passwd'] );
         $user->save();
         return $user;
     }
